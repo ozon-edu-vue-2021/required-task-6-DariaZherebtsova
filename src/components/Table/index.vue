@@ -1,5 +1,11 @@
 <template>
-  <oz-table :rows="rows">
+  <oz-table
+    :rows="rows"
+    :total-pages="100"
+    :current-page="currentPage"
+    :static-paging="typePaging === 'static'"
+    @getPage="getData"
+  >
     <oz-table-column prop="id" title="ID" />
     <oz-table-column prop="postId" title="Post ID" />
 
@@ -22,19 +28,83 @@ import OzTable from './oz-table';
 import OzTableColumn from './oz-table-column';
 
 export default {
-  name: 'SortWrapper',
+  name: 'TableWrapper',
   components: {
     OzTableColumn,
     OzTable
   },
-  async created() {
-    const res = await fetch(`https://jsonplaceholder.typicode.com/comments`);
-    this.rows = await res.json();
+  props: {
+    typePaging: {
+      type: String,
+      default: 'none'
+    },
+  },
+  created() {
+    console.log('---index created', this.typePaging);
+    if (this.typePaging === 'none') {
+      this.getAll();
+    } else {
+      this.blockingPromise = this.getPage(1);
+    }
   },
   data() {
     return {
-      rows: []
+      rows: [],
+      currentPage: 1,
+      blockingPromise: null,
     };
+  },
+  watch: {
+    typePaging(val) {
+      console.log('---watch', val);
+      this.rows = [];
+      this.getData();
+    }
+  },
+  methods: {
+    async getData(number) {
+      switch (this.typePaging) {
+        case 'none':
+          this.getAll();
+          break;
+        
+        case 'static':
+          this.getPage(number ? number : this.currentPage);
+          break;
+
+        case 'infinite':
+          if (!this.blockingPromise) {
+            this.blockingPromise = this.getPage(1);
+            this.blockingPromise = this.infGetPage();
+            this.blockingPromise = this.infGetPage();
+          } else {
+            this.blockingPromise =this.infGetPage();
+          }
+          break;  
+      
+        default:
+          break;
+      }
+    },
+    async getAll() {
+      const res = await fetch(`https://jsonplaceholder.typicode.com/comments`);
+      this.rows = await res.json();
+    },
+    async getPage(number) {
+      console.log('---getPage number' , number);
+      const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${number}`);
+      this.rows = await res.json();
+      this.currentPage = number;
+    },
+    async infGetPage() {
+      console.log('---this.blockingPromise', this.blockingPromise);
+      this.blockingPromise && await this.blockingPromise;
+      console.log('---this.currentPage + 1', this.currentPage + 1);
+      const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${this.currentPage + 1}`);
+      const newRows = await res.json();
+      this.rows = [...this.rows, ...newRows];
+      this.currentPage++;
+    }
   }
 };
 </script>
