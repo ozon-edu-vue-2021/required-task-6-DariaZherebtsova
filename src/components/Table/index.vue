@@ -6,10 +6,10 @@
     :static-paging="typePaging === 'static'"
     @getPage="getData"
   >
-    <oz-table-column prop="id" title="ID" />
-    <oz-table-column prop="postId" title="Post ID" />
+    <oz-table-column prop="id" title="ID" type="number" />
+    <oz-table-column prop="postId" title="Post ID" type="number"/>
 
-    <oz-table-column prop="email">
+    <oz-table-column prop="email" type="string">
       <template #title>
         <b>Email</b>
       </template>
@@ -19,7 +19,7 @@
       </template>
     </oz-table-column>
 
-    <oz-table-column prop="name" title="Name" />
+    <oz-table-column prop="name" title="Name" type="string" />
   </oz-table>
 </template>
 
@@ -58,6 +58,8 @@ export default {
     typePaging(val) {
       console.log('---watch', val);
       this.rows = [];
+      this.currentPage = 1;
+      this.blockingPromise = null;
       this.getData();
     }
   },

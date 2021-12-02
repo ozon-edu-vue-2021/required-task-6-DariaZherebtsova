@@ -9,6 +9,10 @@ export default {
     title: {
       type: String,
       default: ''
+    },
+    type: {
+      type: String,
+      default: 'string'
     }
   }
 };

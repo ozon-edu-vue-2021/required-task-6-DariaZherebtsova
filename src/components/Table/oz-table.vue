@@ -1,6 +1,6 @@
 <script lang="jsx">
 import { orderBy } from 'lodash/collection';
-import FilterDropdown from './filter-dropdown';
+// import FilterDropdown from './filter-dropdown';
 import DotsLoaderIcon from './dost-loader.svg';
 import OzTablePaginator from './oz-table-paginator';
 
@@ -36,14 +36,18 @@ export default {
     sortedRows() {
       let res;
 
+    console.log('---this.sortProp', this.sortProp);
       if (!this.sortProp) {
         res =  this.rows;
+      } else {
+        res = orderBy(this.rows, [this.sortProp], [this.sortDirection]);
       }
 
-      res = orderBy(this.rows, [this.sortProp], [this.sortDirection]);
-
       if(this.filterText) {
-        res = res.filter(row => row[this.filterProp].search(this.filterText) > -1)
+        res = res.filter(row => {
+          console.log('---row[this.filterProp]', row[this.filterProp]);
+          return String(row[this.filterProp]).search(this.filterText) > -1
+        })
       }
 
       return res;
@@ -62,15 +66,18 @@ export default {
       this.filterText = e.target.value;
     },
     renderHead(h, columnsOptions) {
-      const { $style, sortProp, sortDirection, filterProp, filterText } = this;
+      const { $style, sortProp, sortDirection } = this;
 
       return columnsOptions.map((column) => {
+        console.log('---column', column);
         const renderedTitle = column.scopedSlots.title ? column.scopedSlots.title() : column.title;
         let sortIcon = 'sort';
 
         if (sortProp === column.prop) {
           sortIcon = sortDirection === 'asc' ? 'sort-amount-down' : 'sort-amount-up';
         }
+
+
 
         return (
           <th key={column.prop} class={$style.headerCell}>
@@ -81,16 +88,9 @@ export default {
                 icon={sortIcon}
                 on={{ click: () => this.toggleSort(column.prop) }}
               />
-              <FilterDropdown
-                columnProp={column.prop}
-                shown={column.prop === filterProp}
-                filterText={filterText}
-
-                on={{
-                  openFilterTooltip: () => this.openFilterTooltip(column.prop),
-                  closeFilterTooltip: () => this.openFilterTooltip(),
-                  setFilterText: this.setFilterText,
-                }}
+              <input value={column.prop} class={column.type === 'number' ? $style.headerCellInputSmall : ''}/>
+              <font-awesome-icon
+                icon="filter"
               />
             </div>
           </th>
@@ -187,7 +187,12 @@ export default {
 
   .headerCellContent {
     display: flex;
+    justify-content: flex-start;
     align-items: center;
+  }
+
+  .headerCellInputSmall {
+    width: 60px;
   }
 
   .sortIcon {
