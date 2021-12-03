@@ -1,5 +1,6 @@
 <script lang="jsx">
 import { orderBy } from 'lodash/collection';
+import debounce from 'lodash.debounce';
 // import FilterDropdown from './filter-dropdown';
 import DotsLoaderIcon from './dost-loader.svg';
 import OzTablePaginator from './oz-table-paginator';
@@ -26,55 +27,91 @@ export default {
   },
   data() {
     return {
-      sortProp: '',
+      sortProp: {},
       sortDirection: '',
-      filterProp: '',
-      filterText: ''
+      // filterProp: '',
+      filterText: {},
     };
   },
   computed: {
     sortedRows() {
-      let res;
+      let res =  [];
+      let arrSortProps = [];
+      let arrSortDirections = [];
 
-    console.log('---this.sortProp', this.sortProp);
-      if (!this.sortProp) {
-        res =  this.rows;
+      Object.keys(this.sortProp).forEach(prop => {
+        if (this.sortProp[prop]?.changed) {
+          arrSortProps.push(prop);
+          arrSortDirections.push(this.sortProp[prop].direction);
+        }
+      })
+
+      console.log('--arrSortProps', arrSortProps);
+
+      if (arrSortProps.length) {
+        console.log('--sort');
+        res = orderBy(this.rows, arrSortProps, arrSortDirections);
       } else {
-        res = orderBy(this.rows, [this.sortProp], [this.sortDirection]);
+        res =  this.rows;
       }
 
-      if(this.filterText) {
-        res = res.filter(row => {
-          console.log('---row[this.filterProp]', row[this.filterProp]);
-          return String(row[this.filterProp]).search(this.filterText) > -1
-        })
-      }
+      // if (!this.sortProp) {
+      //   res =  this.rows;
+      // } else {
+      //   res = orderBy(this.rows, [this.sortProp], [this.sortDirection]);
+      // }
+
+      Object.keys(this.filterText).forEach(prop => {
+        console.log('--filter prop', prop);
+        console.log('--filter this.filterText[prop]', this.filterText[prop]);
+        if (this.filterText[prop]) {
+          res = res.filter(row => {
+            return String(row[prop]).search(this.filterText[prop]) > -1
+          })
+        }
+      });
+
+      // res = res.filter(row => {
+      //   return String(row[this.filterProp]).search(this.filterText) > -1
+      // })
 
       return res;
     }
   },
   methods: {
     toggleSort(prop) {
-      this.sortProp = prop;
-      this.sortDirection = (this.sortDirection === 'desc' || !this.sortDirection) ? 'asc' : 'desc';
-    },
-    openFilterTooltip(prop = '') {
-      this.filterProp = prop;
-      this.filterText = '';
+      this.sortProp = {
+        ...this.sortProp,
+        [prop]: {
+          changed: true,
+          direction: (this.sortProp[prop]?.direction === 'desc' || !this.sortProp[prop]?.direction) ? 'asc' : 'desc',
+        }
+      };
+      console.log('--this.sortProp', this.sortProp);
+      // this.sortDirection = (this.sortDirection === 'desc' || !this.sortDirection) ? 'asc' : 'desc';
     },
     setFilterText(e) {
       this.filterText = e.target.value;
     },
+    toggleFilter(e, prop) {
+      console.log('---prop', prop);
+      console.log('---e', e);
+      // this.filterProp = prop;
+      this.filterText = {
+        ...this.filterText,
+        [prop]: e.target.value,
+      };
+    },
     renderHead(h, columnsOptions) {
-      const { $style, sortProp, sortDirection } = this;
+      const { $style, sortProp } = this;
 
       return columnsOptions.map((column) => {
-        console.log('---column', column);
+        // console.log('---column', column);
         const renderedTitle = column.scopedSlots.title ? column.scopedSlots.title() : column.title;
         let sortIcon = 'sort';
 
-        if (sortProp === column.prop) {
-          sortIcon = sortDirection === 'asc' ? 'sort-amount-down' : 'sort-amount-up';
+        if (sortProp[column.prop]?.direction) {
+          sortIcon = this.sortProp[column.prop].direction === 'asc' ? 'sort-amount-down' : 'sort-amount-up';
         }
 
 
@@ -88,7 +125,10 @@ export default {
                 icon={sortIcon}
                 on={{ click: () => this.toggleSort(column.prop) }}
               />
-              <input value={column.prop} class={column.type === 'number' ? $style.headerCellInputSmall : ''}/>
+              <input type="search"
+                on={{ input: debounce((e) => this.toggleFilter(e, column.prop), 200) }}
+                class={column.type === 'number' ? $style.headerCellInputSmall : ''}
+              />
               <font-awesome-icon
                 icon="filter"
               />
@@ -189,6 +229,7 @@ export default {
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    gap: 5px;
   }
 
   .headerCellInputSmall {
