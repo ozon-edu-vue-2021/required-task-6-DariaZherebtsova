@@ -28,6 +28,7 @@ export default {
   data() {
     return {
       sortProps: {},
+      isToggleSort: false,
       filterText: {},
     };
   },
@@ -50,11 +51,15 @@ export default {
         }
       });
 
+      if (this.staticPaging) {
+        res = this.getOnePage(res);
+      }
       return res;
     }
   },
   methods: {
     toggleSort(prop) {
+      this.isToggleSort = true;
       this.sortProps = {
         ...this.sortProps,
         [prop]: !this.sortProps?.[prop] ? getNextDirection('none') : getNextDirection(this.sortProps[prop]),
@@ -64,6 +69,7 @@ export default {
       this.filterText = e.target.value;
     },
     toggleFilter(e, prop) {
+      this.isToggleSort = true;
       this.filterText = {
         ...this.filterText,
         [prop]: e.target.value,
@@ -142,7 +148,20 @@ export default {
       return (
         <div {...{ class: this.$style.infPager, style, directives }} />
       );
-    }
+    },
+    getOnePage(rows) {
+      if (this.isToggleSort) {
+        this.$emit('resetCurrentPage');
+        this.isToggleSort = false;
+      }
+      console.log('--getOnePage', this.currentPage);
+      console.log('--rows.length', rows.length);
+      let start = (this.currentPage - 1) * 10;
+      let end = start + 10;
+      end = rows.length && end > rows.length ? rows.length : end;
+      console.log(`start=${start} end=${end}`);
+      return rows.slice(start, end);
+    },
   },
   render(h) {
     const { $style, totalPages, currentPage, staticPaging, $listeners } = this;

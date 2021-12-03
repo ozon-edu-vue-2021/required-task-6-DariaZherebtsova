@@ -1,10 +1,11 @@
 <template>
   <oz-table
     :rows="rows"
-    :total-pages="100"
+    :total-pages="50"
     :current-page="currentPage"
     :static-paging="typePaging === 'static'"
     @getPage="getData"
+    @resetCurrentPage="resetCurrentPage"
   >
     <oz-table-column prop="id" title="ID" type="number" />
     <oz-table-column prop="postId" title="Post ID" type="number"/>
@@ -43,7 +44,7 @@ export default {
     if (this.typePaging === 'none') {
       this.getAll();
     } else {
-      this.blockingPromise = this.getPage(1);
+      this.blockingPromise = this.getAll();
     }
   },
   data() {
@@ -70,6 +71,7 @@ export default {
         
         case 'static':
           this.getPage(number ? number : this.currentPage);
+          // this.getAll();
           break;
 
         case 'infinite':
@@ -91,8 +93,13 @@ export default {
       this.rows = await res.json();
     },
     async getPage(number) {
-      const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${number}`);
-      this.rows = await res.json();
+      console.log('--getPage', number);
+      if (!this.rows.length) {
+        const res = await fetch(`https://jsonplaceholder.typicode.com/comments`);
+        this.rows = await res.json();
+      }
+      // const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${number}`);
+      // this.rows = await res.json();
       this.currentPage = number;
     },
     async infGetPage() {
@@ -101,6 +108,10 @@ export default {
       const newRows = await res.json();
       this.rows = [...this.rows, ...newRows];
       this.currentPage++;
+    },
+    resetCurrentPage() {
+      console.log('--resetCurrentPage');
+      this.currentPage = 1;
     }
   }
 };
