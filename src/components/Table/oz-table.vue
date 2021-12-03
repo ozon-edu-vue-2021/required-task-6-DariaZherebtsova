@@ -1,9 +1,9 @@
 <script lang="jsx">
 import { orderBy } from 'lodash/collection';
 import debounce from 'lodash.debounce';
-// import FilterDropdown from './filter-dropdown';
 import DotsLoaderIcon from './dost-loader.svg';
 import OzTablePaginator from './oz-table-paginator';
+import getNextDirection from '../../utils/getNextDirection.js';
 
 export default {
   name: 'oz-table',
@@ -27,43 +27,22 @@ export default {
   },
   data() {
     return {
-      sortProp: {},
-      sortDirection: '',
-      // filterProp: '',
+      sortProps: {},
       filterText: {},
     };
   },
   computed: {
     sortedRows() {
       let res =  [];
-      let arrSortProps = [];
-      let arrSortDirections = [];
-
-      Object.keys(this.sortProp).forEach(prop => {
-        if (this.sortProp[prop]?.changed) {
-          arrSortProps.push(prop);
-          arrSortDirections.push(this.sortProp[prop].direction);
-        }
-      })
-
-      console.log('--arrSortProps', arrSortProps);
-
+      let arrSortProps = Object.keys(this.sortProps).filter(item => this.sortProps[item] !== 'none');
       if (arrSortProps.length) {
-        console.log('--sort');
+        let arrSortDirections = arrSortProps.map(prop => this.sortProps[prop]);
         res = orderBy(this.rows, arrSortProps, arrSortDirections);
       } else {
         res =  this.rows;
       }
 
-      // if (!this.sortProp) {
-      //   res =  this.rows;
-      // } else {
-      //   res = orderBy(this.rows, [this.sortProp], [this.sortDirection]);
-      // }
-
       Object.keys(this.filterText).forEach(prop => {
-        console.log('--filter prop', prop);
-        console.log('--filter this.filterText[prop]', this.filterText[prop]);
         if (this.filterText[prop]) {
           res = res.filter(row => {
             return String(row[prop]).search(this.filterText[prop]) > -1
@@ -71,50 +50,35 @@ export default {
         }
       });
 
-      // res = res.filter(row => {
-      //   return String(row[this.filterProp]).search(this.filterText) > -1
-      // })
-
       return res;
     }
   },
   methods: {
     toggleSort(prop) {
-      this.sortProp = {
-        ...this.sortProp,
-        [prop]: {
-          changed: true,
-          direction: (this.sortProp[prop]?.direction === 'desc' || !this.sortProp[prop]?.direction) ? 'asc' : 'desc',
-        }
+      this.sortProps = {
+        ...this.sortProps,
+        [prop]: !this.sortProps?.[prop] ? getNextDirection('none') : getNextDirection(this.sortProps[prop]),
       };
-      console.log('--this.sortProp', this.sortProp);
-      // this.sortDirection = (this.sortDirection === 'desc' || !this.sortDirection) ? 'asc' : 'desc';
     },
     setFilterText(e) {
       this.filterText = e.target.value;
     },
     toggleFilter(e, prop) {
-      console.log('---prop', prop);
-      console.log('---e', e);
-      // this.filterProp = prop;
       this.filterText = {
         ...this.filterText,
         [prop]: e.target.value,
       };
     },
     renderHead(h, columnsOptions) {
-      const { $style, sortProp } = this;
+      const { $style, sortProps } = this;
 
       return columnsOptions.map((column) => {
-        // console.log('---column', column);
         const renderedTitle = column.scopedSlots.title ? column.scopedSlots.title() : column.title;
         let sortIcon = 'sort';
 
-        if (sortProp[column.prop]?.direction) {
-          sortIcon = this.sortProp[column.prop].direction === 'asc' ? 'sort-amount-down' : 'sort-amount-up';
+        if (sortProps?.[column.prop] && sortProps[column.prop] !== 'none') {
+          sortIcon = this.sortProps[column.prop] === 'asc' ? 'sort-amount-down' : 'sort-amount-up';
         }
-
-
 
         return (
           <th key={column.prop} class={$style.headerCell}>
@@ -233,7 +197,7 @@ export default {
   }
 
   .headerCellInputSmall {
-    width: 60px;
+    width: 50px;
   }
 
   .sortIcon {

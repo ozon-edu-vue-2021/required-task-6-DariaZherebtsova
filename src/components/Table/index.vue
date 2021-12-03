@@ -40,7 +40,6 @@ export default {
     },
   },
   created() {
-    console.log('---index created', this.typePaging);
     if (this.typePaging === 'none') {
       this.getAll();
     } else {
@@ -55,8 +54,7 @@ export default {
     };
   },
   watch: {
-    typePaging(val) {
-      console.log('---watch', val);
+    typePaging() {
       this.rows = [];
       this.currentPage = 1;
       this.blockingPromise = null;
@@ -93,15 +91,12 @@ export default {
       this.rows = await res.json();
     },
     async getPage(number) {
-      console.log('---getPage number' , number);
       const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${number}`);
       this.rows = await res.json();
       this.currentPage = number;
     },
     async infGetPage() {
-      console.log('---this.blockingPromise', this.blockingPromise);
       this.blockingPromise && await this.blockingPromise;
-      console.log('---this.currentPage + 1', this.currentPage + 1);
       const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${this.currentPage + 1}`);
       const newRows = await res.json();
       this.rows = [...this.rows, ...newRows];
@@ -110,3 +105,11 @@ export default {
   }
 };
 </script>
+
+<style module>
+  .tableSortColumns {
+    text-align: left;
+    padding-left: 10px;
+  }
+
+</style>

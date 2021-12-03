@@ -38,7 +38,6 @@ export default {
   methods: {
     changePaging(type) {
       this.typePaging =  type;
-      console.log('--changePaging', type);
     }
   }
 }

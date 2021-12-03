@@ -11,9 +11,6 @@ export default {
       default: 0
     }
   },
-  mounted() {
-    console.log('--this.totalPages', this.totalPages);
-  },
   computed: {
     shownPagesNumbers() {
       const { currentPage, totalPages } = this;
