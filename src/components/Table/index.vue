@@ -105,11 +105,3 @@ export default {
   }
 };
 </script>
-
-<style module>
-  .tableSortColumns {
-    text-align: left;
-    padding-left: 10px;
-  }
-
-</style>
