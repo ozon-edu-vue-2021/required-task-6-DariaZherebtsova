@@ -1,18 +1,18 @@
 <template>
   <div id="app">
-    <button class="paging-btn paging-btn_type_none"
+    <button :class="$style.pagingButton"
       :disabled="typePaging === 'none'"
       @click="changePaging('none')"
     >
       Сортировка и фильтрация
     </button>
-    <button class="paging-btn paging-btn_type_static"
+    <button :class="$style.pagingButton"
       :disabled="typePaging === 'static'"
       @click="changePaging('static')"
     >
       Статическая пагинация
     </button>
-    <button class="paging-btn paging-btn_type_infinite"
+    <button :class="$style.pagingButton"
       :disabled="typePaging === 'infinite'"
       @click="changePaging('infinite')"
     >
@@ -43,27 +43,20 @@ export default {
 }
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-.paging-btn {
+<style module>
+.pagingButton {
   margin: 20px 0;
   height: 40px;
   padding: 0 15px;
   font-size: 16px;
-  color: #2c3e50;
-  background-color: #75f8f8c0;
+  color: var(--dark-grey);
+  background-color: var(--light-blue);
   border: none;
   cursor: pointer;
 }
 
-.paging-btn:disabled{
-  background-color: rgba(128, 233, 109, 0.856);
+.pagingButton:disabled{
+  background: var(--light-green);
   font-weight: 600;
   cursor: default;
 }

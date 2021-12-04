@@ -1,27 +1,31 @@
 <template>
-  <oz-table
-    :rows="rows"
-    :total-pages="50"
-    :current-page="currentPage"
-    :static-paging="typePaging === 'static'"
-    @getPage="getData"
-    @resetCurrentPage="resetCurrentPage"
-  >
-    <oz-table-column prop="id" title="ID" type="number" />
-    <oz-table-column prop="postId" title="Post ID" type="number"/>
+  <div :class="$style.tableWrapper">
+    <oz-table
+      v-if="Boolean(rows.length)"
+      :rows="rows"
+      :total-pages="50"
+      :current-page="currentPage"
+      :type-paging="typePaging"
+      @getPage="getData"
+      @resetCurrentPage="resetCurrentPage"
+    >
+      <oz-table-column prop="id" title="ID" type="number" />
+      <oz-table-column prop="postId" title="Post ID" type="number"/>
 
-    <oz-table-column prop="email" type="string">
-      <template #title>
-        <b>Email</b>
-      </template>
+      <oz-table-column prop="email" type="string">
+        <template #title>
+          <b>Email</b>
+        </template>
 
-      <template #body="{ row }">
-        <a :href="`mailto:${row.email}`">{{ row.email }}</a>
-      </template>
-    </oz-table-column>
+        <template #body="{ row }">
+          <a :href="`mailto:${row.email}`">{{ row.email }}</a>
+        </template>
+      </oz-table-column>
 
-    <oz-table-column prop="name" title="Name" type="string" />
-  </oz-table>
+      <oz-table-column prop="name" title="Name" type="string" />
+    </oz-table>
+    <div v-else :class="$style.loader"></div>
+  </div>
 </template>
 
 <script>
@@ -41,22 +45,16 @@ export default {
     },
   },
   created() {
-    if (this.typePaging === 'none') {
-      this.getAll();
-    } else {
-      this.blockingPromise = this.getAll();
-    }
+    this.getAll();
   },
   data() {
     return {
       rows: [],
       currentPage: 1,
-      blockingPromise: null,
     };
   },
   watch: {
     typePaging() {
-      this.rows = [];
       this.currentPage = 1;
       this.blockingPromise = null;
       this.getData();
@@ -70,18 +68,11 @@ export default {
           break;
         
         case 'static':
-          this.getPage(number ? number : this.currentPage);
-          // this.getAll();
+          this.currentPage = number ? number : this.currentPage;
           break;
 
         case 'infinite':
-          if (!this.blockingPromise) {
-            this.blockingPromise = this.getPage(1);
-            this.blockingPromise = this.infGetPage();
-            this.blockingPromise = this.infGetPage();
-          } else {
-            this.blockingPromise =this.infGetPage();
-          }
+          this.currentPage++;
           break;  
       
         default:
@@ -92,27 +83,33 @@ export default {
       const res = await fetch(`https://jsonplaceholder.typicode.com/comments`);
       this.rows = await res.json();
     },
-    async getPage(number) {
-      console.log('--getPage', number);
-      if (!this.rows.length) {
-        const res = await fetch(`https://jsonplaceholder.typicode.com/comments`);
-        this.rows = await res.json();
-      }
-      // const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${number}`);
-      // this.rows = await res.json();
-      this.currentPage = number;
-    },
-    async infGetPage() {
-      this.blockingPromise && await this.blockingPromise;
-      const res = await fetch(`https://jsonplaceholder.typicode.com/comments?postId=${this.currentPage + 1}`);
-      const newRows = await res.json();
-      this.rows = [...this.rows, ...newRows];
-      this.currentPage++;
-    },
     resetCurrentPage() {
       console.log('--resetCurrentPage');
       this.currentPage = 1;
+      window.scrollTo(0, 0);
     }
   }
 };
 </script>
+
+<style module>
+.tableWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.loader {
+  margin-top: 100px;
+  border: 16px solid var(--light-grey);
+  border-top: 16px solid var(--light-green);
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>

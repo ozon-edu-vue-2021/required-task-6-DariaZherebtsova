@@ -20,9 +20,9 @@ export default {
       type: Number,
       default: 0
     },
-    staticPaging: {
-      type: Boolean,
-      default: true
+    typePaging: {
+      type: String,
+      default: 'none'
     }
   },
   data() {
@@ -51,9 +51,18 @@ export default {
         }
       });
 
-      if (this.staticPaging) {
-        res = this.getOnePage(res);
+      if (this.typePaging === 'none') {
+        this.resetCurrentPage();
       }
+
+      if (this.typePaging === 'static') {
+        res = this.getStaticPage(res);
+      }
+
+      if (this.typePaging === 'infinite') {
+        res = this.getInfinitePage(res);
+      }
+
       return res;
     }
   },
@@ -149,22 +158,33 @@ export default {
         <div {...{ class: this.$style.infPager, style, directives }} />
       );
     },
-    getOnePage(rows) {
+    resetCurrentPage() {
       if (this.isToggleSort) {
         this.$emit('resetCurrentPage');
         this.isToggleSort = false;
       }
-      console.log('--getOnePage', this.currentPage);
-      console.log('--rows.length', rows.length);
+    },
+    getStaticPage(rows) {
+      this.resetCurrentPage();
+
       let start = (this.currentPage - 1) * 10;
       let end = start + 10;
       end = rows.length && end > rows.length ? rows.length : end;
       console.log(`start=${start} end=${end}`);
+
       return rows.slice(start, end);
+    },
+    getInfinitePage(rows) {
+      this.resetCurrentPage();
+      
+      let end = this.currentPage === 1 ? 20 : this.currentPage * 10;
+      end = rows.length && end > rows.length ? rows.length : end;
+
+      return rows.slice(1, end);
     },
   },
   render(h) {
-    const { $style, totalPages, currentPage, staticPaging, $listeners } = this;
+    const { $style, totalPages, currentPage, typePaging, $listeners } = this;
     const { getPage } = $listeners;
     const columnsOptions = this.getColumnOptions();
     const columnsHead = this.renderHead(h, columnsOptions);
@@ -179,7 +199,7 @@ export default {
           <tbody>{...rows}</tbody>
         </table>
 
-        {staticPaging
+        {typePaging === 'static'
           ? <OzTablePaginator totalPages={totalPages} currentPage={currentPage} on={{ getPage: getPage }} />
           : this.renderInfPager()
         }
@@ -199,13 +219,17 @@ export default {
 
   .cell {
     text-align: left;
-    border-bottom: 1px solid #c8cacc;
+    border-bottom: 1px solid var(--grey);
     padding: 1rem 1rem;
   }
 
   .headerCell {
     composes: cell;
-    background: #75f8f8c0;
+    background: var(--light-blue);
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 
   .headerCellContent {
