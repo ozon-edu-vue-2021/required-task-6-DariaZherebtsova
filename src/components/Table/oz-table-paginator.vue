@@ -72,10 +72,8 @@ export default {
   .pagination {
     height: 48px;
     width: 100%;
-    border-bottom: 1px solid #c8cacc;
     display: flex;
     align-items: center;
-    margin-left: 8px;
   }
 
   .control {

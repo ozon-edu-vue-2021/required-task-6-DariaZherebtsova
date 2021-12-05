@@ -3,11 +3,13 @@
     <oz-table
       v-if="Boolean(rows.length)"
       :rows="rows"
-      :total-pages="50"
+      :items-per-page="itemsPerPage"
+      :total-pages="totalPages"
       :current-page="currentPage"
       :type-paging="typePaging"
       @getPage="getData"
       @resetCurrentPage="resetCurrentPage"
+      @setItemsPerPage="setItemsPerPage"
     >
       <oz-table-column prop="id" title="ID" type="number" />
       <oz-table-column prop="postId" title="Post ID" type="number"/>
@@ -51,7 +53,13 @@ export default {
     return {
       rows: [],
       currentPage: 1,
+      itemsPerPage: 10, 
     };
+  },
+  computed: {
+    totalPages() {
+      return 500 / this.itemsPerPage;
+    }
   },
   watch: {
     typePaging() {
@@ -84,9 +92,12 @@ export default {
       this.rows = await res.json();
     },
     resetCurrentPage() {
-      console.log('--resetCurrentPage');
       this.currentPage = 1;
       window.scrollTo(0, 0);
+    },
+    setItemsPerPage(number) {
+      this.itemsPerPage = number;
+      this.currentPage = 1;
     }
   }
 };

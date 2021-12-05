@@ -23,6 +23,10 @@ export default {
     typePaging: {
       type: String,
       default: 'none'
+    },
+    itemsPerPage: {
+      type: Number,
+      default: 10
     }
   },
   data() {
@@ -31,6 +35,9 @@ export default {
       isToggleSort: false,
       filterText: {},
     };
+  },
+  mounted() {
+
   },
   computed: {
     sortedRows() {
@@ -140,6 +147,29 @@ export default {
           )
         );
     },
+    setItemsPerPage(e) {
+      this.$emit('setItemsPerPage', Number(e.target.value));
+    },
+    renderStaticPager() {
+      const { totalPages, currentPage, $listeners } = this;
+      const { getPage } = $listeners;
+      const listOptions = [5, 10, 20, 50].map((number) => {
+        if (number === this.itemsPerPage) {
+          return <option selected value={number}>{number}</option>
+        } else {
+          return <option value={number}>{number}</option>
+        }
+      });
+
+      return (
+        <div class={ this.$style.staticPager }>
+          <OzTablePaginator totalPages={totalPages} currentPage={currentPage} on={{ getPage: getPage }} />
+          <select class={ this.$style.staticPagerSelect } on={{ change: (e) => this.setItemsPerPage(e) }} name="select" size="1">
+            {listOptions}
+          </select>
+        </div>
+      );
+    },
     renderInfPager() {
       const directives = [
         {
@@ -167,16 +197,15 @@ export default {
     getStaticPage(rows) {
       this.resetCurrentPage();
 
-      let start = (this.currentPage - 1) * 10;
-      let end = start + 10;
+      let start = (this.currentPage - 1) * this.itemsPerPage;
+      let end = start + this.itemsPerPage;
       end = rows.length && end > rows.length ? rows.length : end;
-      console.log(`start=${start} end=${end}`);
 
       return rows.slice(start, end);
     },
     getInfinitePage(rows) {
       this.resetCurrentPage();
-      
+
       let end = this.currentPage === 1 ? 20 : this.currentPage * 10;
       end = rows.length && end > rows.length ? rows.length : end;
 
@@ -184,8 +213,7 @@ export default {
     },
   },
   render(h) {
-    const { $style, totalPages, currentPage, typePaging, $listeners } = this;
-    const { getPage } = $listeners;
+    const { $style, typePaging } = this;
     const columnsOptions = this.getColumnOptions();
     const columnsHead = this.renderHead(h, columnsOptions);
     const rows = this.renderRows(h, columnsOptions);
@@ -200,7 +228,7 @@ export default {
         </table>
 
         {typePaging === 'static'
-          ? <OzTablePaginator totalPages={totalPages} currentPage={currentPage} on={{ getPage: getPage }} />
+          ? this.renderStaticPager() 
           : this.renderInfPager()
         }
 
@@ -250,5 +278,17 @@ export default {
 
   .sortIcon:hover {
     cursor: pointer;
+  }
+
+  .staticPager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #c8cacc;
+    margin-left: 8px;
+  }
+
+  .staticPagerSelect {
+    border: none;
   }
 </style>

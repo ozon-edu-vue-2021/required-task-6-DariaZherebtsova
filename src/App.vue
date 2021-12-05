@@ -4,7 +4,7 @@
       :disabled="typePaging === 'none'"
       @click="changePaging('none')"
     >
-      Сортировка и фильтрация
+      Без панинации
     </button>
     <button :class="$style.pagingButton"
       :disabled="typePaging === 'static'"
